@@ -6,19 +6,27 @@ import {
   updateContact,
 } from '../services/contacts.js';
 import createHttpError from 'http-errors';
+import { parsePaginationParams } from '../utils/parsePaginationParams.js';
+import { parseSortParams } from '../utils/parseSortParams.js';
+import { parseFilterParams } from '../utils/parseFilterParams.js';
 
-export const getContactsController = async (req, res, next) => {
-  try {
-    const contacts = await getAllContacts();
-
-    res.status(200).json({
-      status: 200,
-      message: 'Successfully found contacts!',
-      data: contacts,
-    });
-  } catch (err) {
-    next(err);
-  }
+export const getContactsController = async (req, res) => {
+  const { page, perPage } = parsePaginationParams(req.query);
+  const { sortBy, sortOrder } = parseSortParams(req.query);
+  const { contactType, isFavorite } = parseFilterParams(req.query);
+  const contacts = await getAllContacts({
+    page,
+    perPage,
+    sortBy,
+    sortOrder,
+    contactType,
+    isFavorite,
+  });
+  res.status(200).json({
+    status: 200,
+    message: 'Successfully found contacts!',
+    data: contacts,
+  });
 };
 
 export const getStudentByIdController = async (req, res, next) => {
