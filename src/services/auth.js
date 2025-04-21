@@ -11,10 +11,18 @@ export const registerUser = async (payload) => {
 
   const encryptedPassword = await bcrypt.hash(payload.password, 10);
 
-  return await UsersCollection.create({
-    ...payload,
-    password: encryptedPassword,
-  });
+  try {
+    return await UsersCollection.create({
+      ...payload,
+      password: encryptedPassword,
+    });
+  } catch (error) {
+    if (error.name === 'ValidationError') {
+      throw createHttpError(400, error.message);
+    }
+
+    throw error;
+  }
 };
 
 export const loginUser = async (payload) => {
@@ -22,8 +30,11 @@ export const loginUser = async (payload) => {
   if (!user) {
     throw createHttpError(401, 'User not found');
   }
-  const isEqual = await bcrypt.compare(payload.password, user.password);
+  if (!user.password) {
+    throw createHttpError(401, 'Invalid credentials');
+  }
 
+  const isEqual = await bcrypt.compare(payload.password, user.password);
   if (!isEqual) {
     throw createHttpError(401, 'Unauthorized');
   }
@@ -68,8 +79,9 @@ export const refreshUsersSession = async ({ sessionId, refreshToken }) => {
     throw createHttpError(401, 'Session not found');
   }
 
+  const now = Date.now();
   const isSessionTokenExpired =
-    new Date() > new Date(session.refreshTokenValidUntil);
+    now > new Date(session.refreshTokenValidUntil).getTime();
 
   if (isSessionTokenExpired) {
     throw createHttpError(401, 'Session token expired');
