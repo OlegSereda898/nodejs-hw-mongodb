@@ -1,4 +1,5 @@
 import {
+  countAllContacts,
   createContact,
   deleteContact,
   getAllContacts,
@@ -14,19 +15,32 @@ export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
   const { contactType, isFavorite } = parseFilterParams(req.query);
-  const contacts = await getAllContacts({
-    userId: req.user._id,
-    page,
-    perPage,
-    sortBy,
-    sortOrder,
-    contactType,
-    isFavorite,
-  });
+
+  const userId = req.user._id;
+
+  const [contacts, total] = await Promise.all([
+    getAllContacts({
+      userId,
+      page,
+      perPage,
+      sortBy,
+      sortOrder,
+      contactType,
+      isFavorite,
+    }),
+    countAllContacts({ userId, contactType, isFavorite }),
+  ]);
+
   res.status(200).json({
     status: 200,
     message: 'Successfully found contacts!',
-    data: contacts,
+    data: {
+      contacts,
+      total,
+      page,
+      perPage,
+      totalPages: Math.ceil(total / perPage),
+    },
   });
 };
 

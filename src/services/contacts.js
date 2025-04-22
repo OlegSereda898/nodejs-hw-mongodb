@@ -45,3 +45,11 @@ export const updateContact = async (contactId, data, userId) => {
 export const deleteContact = async (contactId, userId) => {
   return await ContactsCollection.findOneAndDelete({ _id: contactId, userId });
 };
+
+export const countAllContacts = async ({ userId, contactType, isFavorite }) => {
+  const query = { userId };
+  if (contactType) query.contactType = contactType;
+  if (isFavorite !== undefined) query.isFavourite = isFavorite;
+
+  return await ContactsCollection.countDocuments(query);
+};
