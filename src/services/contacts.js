@@ -49,7 +49,9 @@ export const deleteContact = async (contactId, userId) => {
 export const countAllContacts = async ({ userId, contactType, isFavorite }) => {
   const query = { userId };
   if (contactType) query.contactType = contactType;
-  if (isFavorite !== undefined) query.isFavourite = isFavorite;
+  if (isFavorite !== undefined) {
+    query.isFavourite = isFavorite === 'true' || isFavorite === true;
+  }
 
   return await ContactsCollection.countDocuments(query);
 };

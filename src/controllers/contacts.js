@@ -18,7 +18,7 @@ export const getContactsController = async (req, res) => {
 
   const userId = req.user._id;
 
-  const [contacts, total] = await Promise.all([
+  const [contacts, totalItems] = await Promise.all([
     getAllContacts({
       userId,
       page,
@@ -31,15 +31,21 @@ export const getContactsController = async (req, res) => {
     countAllContacts({ userId, contactType, isFavorite }),
   ]);
 
+  const totalPages = Math.ceil(totalItems / perPage);
+  const hasPreviousPage = page > 1;
+  const hasNextPage = page < totalPages;
+
   res.status(200).json({
     status: 200,
     message: 'Successfully found contacts!',
     data: {
-      contacts,
-      total,
+      data: contacts,
       page,
       perPage,
-      totalPages: Math.ceil(total / perPage),
+      totalItems,
+      totalPages,
+      hasPreviousPage,
+      hasNextPage,
     },
   });
 };
