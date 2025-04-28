@@ -14,7 +14,10 @@ const transporter = nodemailer.createTransport({
 
 export const sendEmail = async (options) => {
   try {
-    const result = await transporter.sendMail(options);
+    const result = await transporter.sendMail({
+      from: getEnvVar(SMTP.SMTP_FROM),
+      ...options,
+    });
     console.log('✅ Email sent:', result);
     return result;
   } catch (error) {

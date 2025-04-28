@@ -27,4 +27,4 @@ export const updateContactSchema = Joi.object({
   contactType: Joi.string().valid('work', 'home', 'personal').messages({
     'any.only': 'Contact type must be one of: work, home, personal',
   }),
-});
+}).min(1);

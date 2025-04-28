@@ -13,6 +13,7 @@ import { parseFilterParams } from '../utils/parseFilterParams.js';
 import { getEnvVar } from '../utils/getEnvVar.js';
 import { saveFileToCloudinary } from '../utils/saveFileToCloudinary.js';
 import { saveFileToUploadDir } from '../utils/saveFileToUploadDir.js';
+import { ContactsCollection } from '../db/models/contact.js';
 
 export const getContactsController = async (req, res) => {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -72,29 +73,30 @@ export const createContactController = async (req, res, next) => {
   const photo = req.file;
   let photoUrl;
 
-  if (photo) {
-    try {
+  try {
+    if (photo) {
       if (getEnvVar('ENABLE_CLOUDINARY') === 'true') {
         photoUrl = await saveFileToCloudinary(photo);
       } else {
         photoUrl = await saveFileToUploadDir(photo);
       }
-    } catch {
-      return next(createHttpError(500, 'Failed to upload photo'));
     }
+
+    const contact = await createContact({
+      ...req.body,
+      userId: req.user._id,
+      photo: photoUrl,
+    });
+
+    res.status(201).json({
+      status: 201,
+      message: 'Successfully created a contact!',
+      data: contact,
+    });
+  } catch (error) {
+    console.error('Error while creating contact:', error);
+    next(createHttpError(500, 'Failed to create contact'));
   }
-
-  const contact = await createContact({
-    ...req.body,
-    userId: req.user._id,
-    photo: photoUrl,
-  });
-
-  res.status(201).json({
-    status: 201,
-    message: 'Successfully created a contact!',
-    data: contact,
-  });
 };
 
 export const patchContactController = async (req, res, next) => {
@@ -139,4 +141,38 @@ export const deleteContactController = async (req, res, next) => {
   }
 
   res.status(204).send();
+};
+
+export const updateContactPhoto = async (req, res) => {
+  const { contactId } = req.params;
+  const { _id: userId } = req.user;
+
+  if (!req.file) {
+    return res.status(400).json({ message: 'Photo file is required' });
+  }
+
+  let photoURL;
+
+  try {
+    if (process.env.ENABLE_CLOUDINARY === 'true') {
+      photoURL = await saveFileToCloudinary(req.file);
+    } else {
+      photoURL = await saveFileToUploadDir(req.file);
+    }
+
+    const updatedContact = await ContactsCollection.findOneAndUpdate(
+      { _id: contactId, userId },
+      { photo: photoURL },
+      { new: true },
+    );
+
+    if (!updatedContact) {
+      return res.status(404).json({ message: 'Contact not found' });
+    }
+
+    res.status(200).json(updatedContact);
+  } catch (error) {
+    console.error('Update contact photo error:', error.message);
+    res.status(500).json({ message: 'Failed to update contact photo' });
+  }
 };
