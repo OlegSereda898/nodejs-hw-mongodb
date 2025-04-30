@@ -120,7 +120,7 @@ export const sendResetToken = async (email) => {
     },
     getEnvVar('JWT_SECRET'),
     {
-      expiresIn: '15m',
+      expiresIn: '5m',
     },
   );
 
@@ -136,7 +136,7 @@ export const sendResetToken = async (email) => {
   const template = handlebars.compile(templateSource);
   const html = template({
     name: user.name,
-    link: `${getEnvVar('APP_DOMAIN')}/auth/reset-pwd/${resetToken}`,
+    link: `${getEnvVar('APP_DOMAIN')}/auth/reset-password/${resetToken}`,
   });
 
   try {
