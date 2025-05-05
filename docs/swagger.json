@@ -14,7 +14,7 @@
       "url": "http://localhost:3000"
     },
     {
-      "url": "https://nodejs-hw-mongodb-14-qilx.onrender.com"
+      "url": "https://nodejs-hw-mongodb-14-wo8v.onrender.com"
     }
   ],
   "tags": [
@@ -472,11 +472,7 @@
                   "properties": {
                     "status": {
                       "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Contact deleted successfully!"
+                      "example": 204
                     }
                   }
                 }
